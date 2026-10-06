@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Know Yourself</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  min-height: 100vh;
+  color: #222;
+}
+
+.container {
+  max-width: 650px;
+  margin: auto;
+  padding: 20px;
+}
+
+.card {
+  background: white;
+  border-radius: 22px;
+  padding: 25px;
+  margin-top: 25px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #666;
+  margin-bottom: 25px;
+}
+
+input {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 16px;
+  margin: 10px 0 18px;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: #667eea;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.language-buttons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.language-buttons button {
+  background: #eee;
+  color: #333;
+}
+
+.language-buttons button.active {
+  background: #667eea;
+  color: white;
+}
+
+.question {
+  margin-bottom: 25px;
+}
+
+.question h3 {
+  margin-bottom: 12px;
+}
+
+.option {
+  display: block;
+  padding: 13px;
+  margin: 8px 0;
+  background: #f5f5f5;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.option:hover {
+  background: #e9e9ff;
+}
+
+.option input {
+  width: auto;
+  margin: 0 8px 0 0;
+}
+
+.result {
+  text-align: center;
+}
+
+.score {
+  font-size: 40px;
+  font-weight: bold;
+  color: #667eea;
+}
+
+.trait {
+  text-align: left;
+  margin: 15px 0;
+}
+
+.trait-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.bar {
+  height: 12px;
+  background: #eee;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: #667eea;
+}
+
+.hidden {
+  display: none;
+}
+
+.small {
+  font-size: 13px;
+  color: #777;
+  text-align: center;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="card" id="startScreen">
+
+    <div class="language-buttons">
+      <button onclick="setLanguage('en')" id="enBtn">English</button>
+      <button onclick="setLanguage('hi')" id="hiBtn">हिन्दी</button>
+      <button onclick="setLanguage('bn')" id="bnBtn">বাংলা</button>
+    </div>
+
+    <h1 id="title">Know Yourself 🌱</h1>
+
+    <p class="subtitle" id="description">
+      Discover your personality through your choices.
+    </p>
+
+    <label id="nameLabel">Enter your name</label>
+
+    <input
+      type="text"
+      id="nameInput"
+      placeholder="Your name"
+    >
+
+    <button onclick="startQuiz()" id="startButton">
+      Start Quiz
+    </button>
+
+  </div>
+
+
+  <div class="card hidden" id="quizScreen">
+
+    <div id="questions"></div>
+
+    <button onclick="finishQuiz()" id="submitButton">
+      See My Result
+    </button>
+
+  </div>
+
+
+  <div class="card hidden result" id="resultScreen">
+
+    <h1 id="resultTitle">Your Result</h1>
+
+    <p id="resultName"></p>
+
+    <div class="score" id="mainScore"></div>
+
+    <p id="resultDescription"></p>
+
+    <div id="traits"></div>
+
+    <button onclick="location.reload()" id="restartButton">
+      Take Again
+    </button>
+
+  </div>
+
+</div>
+
+
+<script>
+
+let language = "en";
+let userName = "";
+
+const questions = [
+
+{
+  q: {
+    en: "You worked hard for something, but someone else gets the opportunity you wanted. What is your first reaction?",
+    hi: "आपने किसी चीज़ के लिए बहुत मेहनत की, लेकिन वह अवसर किसी और को मिल गया। आपकी पहली प्रतिक्रिया क्या होगी?",
+    bn: "আপনি কোনো কিছুর জন্য অনেক পরিশ্রম করেছেন, কিন্তু সুযোগটি অন্য কেউ পেয়ে গেল। আপনার প্রথম প্রতিক্রিয়া কী হবে?"
+  },
+  options: [
+    {text:{en:"I'm happy for them.",hi:"मैं उनके लिए खुश हूँ।",bn:"আমি তার জন্য খুশি।"}, traits:["positive","kind"]},
+    {text:{en:"I'm disappointed, but I'll try again.",hi:"मैं निराश हूँ, लेकिन फिर कोशिश करूँगा।",bn:"আমি হতাশ, কিন্তু আবার চেষ্টা করব।"}, traits:["positive","resilience"]},
+    {text:{en:"I wonder why they got it instead of me.",hi:"मैं सोचता हूँ कि मुझे क्यों नहीं मिला।",bn:"আমি ভাবি, আমার পরিবর্তে সে কেন পেল।"}, traits:["negative"]},
+    {text:{en:"I feel like there is no point trying anymore.",hi:"मुझे लगता है कि अब कोशिश करने का कोई फायदा नहीं।",bn:"আমার মনে হয় আর চেষ্টা করে লাভ নেই।"}, traits:["negative"]}
+  ]
+},
+
+{
+  q: {
+    en: "A close friend suddenly starts ignoring your messages. What do you think first?",
+    hi: "एक करीबी दोस्त अचानक आपके संदेशों को नज़रअंदाज़ करने लगे। आप सबसे पहले क्या सोचेंगे?",
+    bn: "একজন ঘনিষ্ঠ বন্ধু হঠাৎ আপনার মেসেজ উপেক্ষা করতে শুরু করল। আপনি প্রথমে কী ভাববেন?"
+  },
+  options: [
+    {text:{en:"Maybe they're going through something.",hi:"शायद वे किसी परेशानी से गुजर रहे हैं।",bn:"হয়তো সে কোনো সমস্যার মধ্য দিয়ে যাচ্ছে।"}, traits:["empathy"]},
+    {text:{en:"I'll ask them if everything is okay.",hi:"मैं पूछूँगा कि सब ठीक है या नहीं।",bn:"আমি জিজ্ঞেস করব সব ঠিক আছে কি না।"}, traits:["empathy","kind"]},
+    {text:{en:"They probably don't care about me anymore.",hi:"शायद अब उन्हें मेरी परवाह नहीं है।",bn:"হয়তো এখন আর সে আমাকে নিয়ে ভাবে না।"}, traits:["negative"]},
+    {text:{en:"I'll ignore them back.",hi:"मैं भी उन्हें नज़रअंदाज़ करूँगा।",bn:"আমিও তাকে উপেক্ষা করব।"}, traits:["negative","emotional"]}
+  ]
+},
+
+{
+  q: {
+    en: "Someone criticizes something you did. What do you usually do?",
+    hi: "कोई आपके किए हुए काम की आलोचना करता है। आप आमतौर पर क्या करते हैं?",
+    bn: "কেউ আপনার করা কাজের সমালোচনা করল। আপনি সাধারণত কী করেন?"
+  },
+  options: [
+    {text:{en:"I listen and see whether they're right.",hi:"मैं सुनता हूँ और देखता हूँ कि वे सही हैं या नहीं।",bn:"আমি শুনি এবং দেখি সে ঠিক বলছে কি না।"}, traits:["selfaware"]},
+    {text:{en:"I feel bad initially but think about it later.",hi:"पहले मुझे बुरा लगता है, लेकिन बाद में सोचता हूँ।",bn:"প্রথমে খারাপ লাগে, পরে বিষয়টি নিয়ে ভাবি।"}, traits:["emotional"]},
+    {text:{en:"I immediately defend myself.",hi:"मैं तुरंत अपना बचाव करता हूँ।",bn:"আমি সঙ্গে সঙ্গে নিজেকে রক্ষা করি।"}, traits:["emotional"]},
+    {text:{en:"I think they're just trying to bring me down.",hi:"मुझे लगता है वे मुझे नीचा दिखाना चाहते हैं।",bn:"আমার মনে হয় সে শুধু আমাকে নিচে নামাতে চাইছে।"}, traits:["negative"]}
+  ]
+},
+
+{
+  q: {
+    en: "You see someone you don't know struggling with something.",
+    hi: "आप किसी अनजान व्यक्ति को किसी परेशानी से जूझते हुए देखते हैं।",
+    bn: "আপনি একজন অপরিচিত মানুষকে কোনো সমস্যায় পড়তে দেখলেন।"
+  },
+  options: [
+    {text:{en:"I help if I can.",hi:"अगर मैं मदद कर सकता हूँ तो करता हूँ।",bn:"আমি পারলে সাহায্য করি।"}, traits:["kind","empathy"]},
+    {text:{en:"I notice but usually don't get involved.",hi:"मैं देखता हूँ, लेकिन आमतौर पर शामिल नहीं होता।",bn:"আমি দেখি, কিন্তু সাধারণত জড়াই না।"}, traits:[]},
+    {text:{en:"I help only if they ask.",hi:"मैं तभी मदद करता हूँ जब वे पूछें।",bn:"সে চাইলে তবেই সাহায্য করি।"}, traits:["kind"]},
+    {text:{en:"I assume someone else will help them.",hi:"मैं मान लेता हूँ कि कोई और उनकी मदद करेगा।",bn:"আমি ধরে নিই অন্য কেউ তাকে সাহায্য করবে।"}, traits:[]}
+  ]
+},
+
+{
+  q: {
+    en: "Your friend gets something you've wanted for a long time.",
+    hi: "आपके दोस्त को वह चीज़ मिल जाती है जिसे आप लंबे समय से चाहते थे।",
+    bn: "আপনার বন্ধু এমন একটি জিনিস পেল যা আপনি অনেকদিন ধরে চেয়েছিলেন।"
+  },
+  options: [
+    {text:{en:"I'm genuinely happy for them.",hi:"मैं सच में उनके लिए खुश हूँ।",bn:"আমি সত্যিই তার জন্য খুশি।"}, traits:["kind","positive"]},
+    {text:{en:"I'm happy, but I feel a little jealous.",hi:"मैं खुश हूँ, लेकिन थोड़ी जलन होती है।",bn:"আমি খুশি, কিন্তু একটু ঈর্ষা হয়।"}, traits:["emotional"]},
+    {text:{en:"I compare myself with them.",hi:"मैं खुद की तुलना उनसे करता हूँ।",bn:"আমি নিজের সঙ্গে তার তুলনা করি।"}, traits:["negative"]},
+    {text:{en:"It bothers me quite a lot.",hi:"यह मुझे काफी परेशान करता है।",bn:"এটা আমাকে অনেক বিরক্ত করে।"}, traits:["negative"]}
+  ]
+},
+
+{
+  q: {
+    en: "You make a big mistake. What do you usually do?",
+    hi: "आपसे एक बड़ी गलती हो जाती है। आप आमतौर पर क्या करते हैं?",
+    bn: "আপনি একটি বড় ভুল করলেন। আপনি সাধারণত কী করেন?"
+  },
+  options: [
+    {text:{en:"I accept it and learn from it.",hi:"मैं इसे स्वीकार करता हूँ और उससे सीखता हूँ।",bn:"আমি তা মেনে নিয়ে শিখি।"}, traits:["selfaware","resilience"]},
+    {text:{en:"I feel embarrassed, then move on.",hi:"मुझे शर्मिंदगी होती है, फिर आगे बढ़ता हूँ।",bn:"আমি লজ্জা পাই, তারপর এগিয়ে যাই।"}, traits:["resilience"]},
+    {text:{en:"I keep thinking about it.",hi:"मैं उसके बारे में बार-बार सोचता रहता हूँ।",bn:"আমি বারবার সেটা নিয়ে ভাবতে থাকি।"}, traits:["negative"]},
+    {text:{en:"I try to avoid admitting it.",hi:"मैं इसे स्वीकार करने से बचता हूँ।",bn:"আমি তা স্বীকার করা এড়িয়ে যাই।"}, traits:["negative"]}
+  ]
+},
+
+{
+  q: {
+    en: "Someone apologizes to you after hurting your feelings.",
+    hi: "आपकी भावनाओं को ठेस पहुँचाने के बाद कोई आपसे माफी मांगता है।",
+    bn: "আপনার অনুভূতিতে আঘাত দেওয়ার পর কেউ আপনার কাছে ক্ষমা চাইল।"
+  },
+  options: [
+    {text:{en:"I forgive them if the apology is genuine.",hi:"अगर माफी सच्ची है तो मैं माफ कर देता हूँ।",bn:"ক্ষমা চাওয়াটা সত্যি হলে আমি ক্ষমা করি।"}, traits:["kind","empathy"]},
+    {text:{en:"I forgive them but need some time.",hi:"मैं माफ करता हूँ लेकिन मुझे थोड़ा समय चाहिए।",bn:"আমি ক্ষমা করি, তবে একটু সময় লাগে।"}, traits:["empathy"]},
+    {text:{en:"I accept the apology but don't forget it.",hi:"मैं माफी स्वीकार करता हूँ लेकिन भूलता नहीं।",bn:"আমি ক্ষমা গ্রহণ করি, কিন্তু ভুলে যাই না।"}, traits:["emotional"]},
+    {text:{en:"I usually don't forgive easily.",hi:"मैं आमतौर पर आसानी से माफ नहीं करता।",bn:"আমি সাধারণত সহজে ক্ষমা করি না।"}, traits:["negative"]}
+  ]
+},
+
+{
+  q: {
+    en: "Your first attempt at an important goal fails.",
+    hi: "आपके किसी महत्वपूर्ण लक्ष्य की पहली कोशिश असफल हो जाती है।",
+    bn: "আপনার গুরুত্বপূর্ণ লক্ষ্যে প্রথম চেষ্টা ব্যর্থ হলো।"
+  },
+  options: [
+    {text:{en:"I try a different approach.",hi:"मैं दूसरा तरीका आज़माता हूँ।",bn:"আমি অন্যভাবে চেষ্টা করি।"}, traits:["resilience","positive"]},
+    {text:{en:"I take a break and try again.",hi:"मैं थोड़ा आराम करके फिर कोशिश करता हूँ।",bn:"আমি একটু বিরতি নিয়ে আবার চেষ্টা করি।"}, traits:["resilience"]},
+    {text:{en:"I start doubting whether I can do it.",hi:"मुझे शक होने लगता है कि मैं कर सकता हूँ या नहीं।",bn:"আমি সন্দেহ করতে শুরু করি যে আমি পারব কি না।"}, traits:["negative"]},
+    {text:{en:"I usually give up.",hi:"मैं आमतौर पर हार मान लेता हूँ।",bn:"আমি সাধারণত হাল ছেড়ে দিই।"}, traits:["negative"]}
+  ]
+},
+
+{
+  q: {
+    en: "When you're angry with someone, what do you usually do?",
+    hi: "जब आप किसी से नाराज़ होते हैं, तो आमतौर पर क्या करते हैं?",
+    bn: "আপনি কারও উপর রেগে গেলে সাধারণত কী করেন?"
+  },
+  options: [
+    {text:{en:"I calm down before responding.",hi:"मैं जवाब देने से पहले शांत होता हूँ।",bn:"উত্তর দেওয়ার আগে আমি শান্ত হই।"}, traits:["emotional"]},
+    {text:{en:"I tell them honestly what's bothering me.",hi:"मैं ईमानदारी से बताता हूँ कि मुझे क्या परेशान कर रहा है।",bn:"আমি সৎভাবে বলি কী আমাকে বিরক্ত করছে।"}, traits:["selfaware"]},
+    {text:{en:"I say things I later regret.",hi:"मैं ऐसी बातें कह देता हूँ जिनका बाद में पछतावा होता है।",bn:"আমি এমন কথা বলে ফেলি যার জন্য পরে আফসোস হয়।"}, traits:["emotional","negative"]},
+    {text:{en:"I give them the silent treatment.",hi:"मैं उनसे बात करना बंद कर देता हूँ।",bn:"আমি তার সঙ্গে কথা বলা বন্ধ করে দিই।"}, traits:["negative","emotional"]}
+  ]
+},
+
+{
+  q: {
+    en: "When you think about your future, which feels closest to you?",
+    hi: "जब आप अपने भविष्य के बारे में सोचते हैं, तो इनमें से कौन सा आपके करीब है?",
+    bn: "আপনি ভবিষ্যতের কথা ভাবলে কোনটি আপনার সঙ্গে সবচেয়ে বেশি মেলে?"
+  },
+  options: [
+    {text:{en:"I'm excited to see what I can achieve.",hi:"मैं यह देखने के लिए उत्साहित हूँ कि मैं क्या हासिल कर सकता हूँ।",bn:"আমি ভবিষ্যতে কী করতে পারি তা নিয়ে উত্তেজিত।"}, traits:["positive","resilience"]},
+    {text:{en:"I'm hopeful, but I know there will be difficulties.",hi:"मैं आशावादी हूँ, लेकिन जानता हूँ कि मुश्किलें आएंगी।",bn:"আমি আশাবাদী, তবে জানি কঠিন সময় আসবে।"}, traits:["positive"]},
+    {text:{en:"I'm uncertain about what will happen.",hi:"मैं निश्चित नहीं हूँ कि क्या होगा।",bn:"কী হবে তা নিয়ে আমি অনিশ্চিত।"}, traits:[]},
+    {text:{en:"I often expect things to go wrong.",hi:"मैं अक्सर उम्मीद करता हूँ कि चीजें गलत होंगी।",bn:"আমি প্রায়ই ভাবি সবকিছু খারাপ হবে।"}, traits:["negative"]}
+  ]
+}
+
+];
+
+const text = {
+
+en:{
+title:"Know Yourself 🌱",
+description:"Discover your personality through your choices.",
+name:"Enter your name",
+placeholder:"Your name",
+start:"Start Quiz",
+submit:"See My Result",
+result:"Your Result",
+again:"Take Again"
+},
+
+hi:{
+title:"खुद को जानें 🌱",
+description:"अपने चुनावों के माध्यम से अपने व्यक्तित्व को जानें।",
+name:"अपना नाम दर्ज करें",
+placeholder:"आपका नाम",
+start:"क्विज़ शुरू करें",
+submit:"मेरा परिणाम देखें",
+result:"आपका परिणाम",
+again:"फिर से करें"
+},
+
+bn:{
+title:"নিজেকে জানুন 🌱",
+description:"আপনার পছন্দের মাধ্যমে আপনার ব্যক্তিত্ব আবিষ্কার করুন।",
+name:"আপনার নাম লিখুন",
+placeholder:"আপনার নাম",
+start:"কুইজ শুরু করুন",
+submit:"আমার ফলাফল দেখুন",
+result:"আপনার ফলাফল",
+again:"আবার করুন"
+}
+
+};
+
+function setLanguage(lang){
+
+language = lang;
+
+document.getElementById("enBtn").classList.remove("active");
+document.getElementById("hiBtn").classList.remove("active");
+document.getElementById("bnBtn").classList.remove("active");
+
+document.getElementById(lang+"Btn").classList.add("active");
+
+document.getElementById("title").innerText = text[lang].title;
+document.getElementById("description").innerText = text[lang].description;
+document.getElementById("nameLabel").innerText = text[lang].name;
+document.getElementById("nameInput").placeholder = text[lang].placeholder;
+document.getElementById("startButton").innerText = text[lang].start;
+document.getElementById("submitButton").innerText = text[lang].submit;
+document.getElementById("resultTitle").innerText = text[lang].result;
+document.getElementById("restartButton").innerText = text[lang].again;
+
+if(!document.getElementById("quizScreen").classList.contains("hidden")){
+  renderQuestions();
+}
+
+}
+
+function startQuiz(){
+
+userName = document.getElementById("nameInput").value.trim();
+
+if(!userName){
+  alert(
+    language === "hi"
+    ? "कृपया अपना नाम दर्ज करें।"
+    : language === "bn"
+    ? "অনুগ্রহ করে আপনার নাম লিখুন।"
+    : "Please enter your name."
+  );
+  return;
+}
+
+document.getElementById("startScreen").classList.add("hidden");
+document.getElementById("quizScreen").classList.remove("hidden");
+
+renderQuestions();
+
+window.scrollTo(0,0);
+
+}
+
+function renderQuestions(){
+
+const container = document.getElementById("questions");
+
+container.innerHTML = "";
+
+questions.forEach((question,index)=>{
+
+const div = document.createElement("div");
+
+div.className = "question";
+
+let html = `<h3>${index+1}. ${question.q[language]}</h3>`;
+
+question.options.forEach((option,optIndex)=>{
+
+html += `
+<label class="option">
+<input type="radio" name="q${index}" value="${optIndex}">
+${option.text[language]}
+</label>
+`;
+
+});
+
+div.innerHTML = html;
+
+container.appendChild(div);
+
+});
+
+}
+
+function finishQuiz(){
+
+let selected = [];
+
+for(let i=0;i<questions.length;i++){
+
+const answer = document.querySelector(
+`input[name="q${i}"]:checked`
+);
+
+if(!answer){
+
+alert(
+language === "hi"
+? "कृपया सभी प्रश्नों का उत्तर दें।"
+: language === "bn"
+? "অনুগ্রহ করে সব প্রশ্নের উত্তর দিন।"
+: "Please answer all questions."
+);
+
+return;
+
+}
+
+selected.push(
+questions[i].options[parseInt(answer.value)]
+);
+
+}
+
+let traits = {
+positive:0,
+negative:0,
+kind:0,
+empathy:0,
+resilience:0,
+emotional:0,
+selfaware:0
+};
+
+selected.forEach(answer=>{
+
+answer.traits.forEach(trait=>{
+traits[trait]++;
+});
+
+});
+
+const maxScore = questions.length;
+
+const positivePercent =
+Math.round((traits.positive/maxScore)*100);
+
+const negativePercent =
+Math.round((traits.negative/maxScore)*100);
+
+const kindPercent =
+Math.round((traits.kind/maxScore)*100);
+
+const empathyPercent =
+Math.round((traits.empathy/maxScore)*100);
+
+const resiliencePercent =
+Math.round((traits.resilience/maxScore)*100);
+
+const emotionalPercent =
+Math.round((traits.emotional/maxScore)*100);
+
+const selfawarePercent =
+Math.round((traits.selfaware/maxScore)*100);
+
+let mainResult;
+
+if(empathyPercent >= 60){
+mainResult = language==="hi"
+? "आप बहुत सहानुभूतिशील व्यक्ति हैं 💚"
+: language==="bn"
+? "আপনি একজন খুব সহানুভূতিশীল মানুষ 💚"
+: "You are a highly empathetic person 💚";
+}
+else if(positivePercent >= 60){
+mainResult = language==="hi"
+? "आप एक आशावादी व्यक्ति हैं ☀️"
+: language==="bn"
+? "আপনি একজন আশাবাদী মানুষ ☀️"
+: "You are an optimistic person ☀️";
+}
+else if(negativePercent >= 60){
+mainResult = language==="hi"
+? "आपमें थोड़ा अधिक नकारात्मक सोचने की प्रवृत्ति हो सकती है 🌧️"
+: language==="bn"
+? "আপনার মধ্যে কিছুটা নেতিবাচকভাবে চিন্তা করার প্রবণতা থাকতে পারে 🌧️"
+: "You may have a tendency toward negative thinking 🌧️";
+}
+else{
+mainResult = language==="hi"
+? "आप एक संतुलित सोच वाले व्यक्ति हैं ⚖️"
+: language==="bn"
+? "আপনি ভারসাম্যপূর্ণভাবে চিন্তা করেন ⚖️"
+: "You have a balanced way of thinking ⚖️";
+}
+
+document.getElementById("quizScreen").classList.add("hidden");
+document.getElementById("resultScreen").classList.remove("hidden");
+
+document.getElementById("resultName").innerText =
+userName;
+
+document.getElementById("mainScore").innerText =
+Math.round(
+(positivePercent + kindPercent + empathyPercent + resiliencePercent + selfawarePercent)
+/
+5
+) + "%";
+
+document.getElementById("resultDescription").innerText =
+mainResult;
+
+const traitsContainer =
+document.getElementById("traits");
+
+traitsContainer.innerHTML = "";
+
+addTrait("☀️ Positivity",positivePercent);
+addTrait("💚 Kindness",kindPercent);
+addTrait("🤝 Empathy",empathyPercent);
+addTrait("💪 Resilience",resiliencePercent);
+addTrait("🧘 Emotional control",100-emotionalPercent);
+addTrait("🪞 Self-awareness",selfawarePercent);
+addTrait("🌧️ Negative thinking",negativePercent);
+
+window.scrollTo(0,0);
+
+}
+
+function addTrait(name,value){
+
+const div = document.createElement("div");
+
+div.className = "trait";
+
+div.innerHTML = `
+<div class="trait-name">${name}: ${value}%</div>
+<div class="bar">
+<div class="bar-fill" style="width:${value}%"></div>
+</div>
+`;
+
+document.getElementById("traits").appendChild(div);
+
+}
+
+setLanguage("en");
+
+</script>
+
+</body>
+  </html>
